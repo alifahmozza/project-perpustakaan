@@ -1,53 +1,67 @@
-<!DOCTYPE html>
-<html lang="id">
-<head>
-    <meta charset="UTF-8">
-    <title>Edit Peminjaman</title>
-    <style>
-        body { font-family: sans-serif; margin: 40px; max-width: 500px; }
-        label { display: block; margin-top: 12px; font-weight: bold; }
-        input, select { width: 100%; padding: 6px; margin-top: 4px; box-sizing: border-box; }
-        .error { color: #b91c1c; font-size: 14px; margin-top: 4px; }
-        .btn { margin-top: 20px; padding: 8px 16px; background: #2563eb; color: #fff; border: none; border-radius: 4px; cursor: pointer; }
-        .readonly { background: #f3f4f6; padding: 8px; border-radius: 4px; margin-top: 4px; }
-    </style>
-</head>
-<body>
-    <h1>Edit Peminjaman</h1>
-    <p><a href="{{ route('loans.index') }}">&larr; Kembali ke daftar peminjaman</a></p>
+@extends('layouts.app')
 
-    <label>Anggota</label>
-    <div class="readonly">{{ $loan['member']['nama'] }} ({{ $loan['member']['nim'] }})</div>
+@section('title', 'Edit Peminjaman')
 
-    <label>Buku</label>
-    <div class="readonly">
-        @foreach ($loan['loanItems'] as $item)
-            {{ $item['book']['judul'] }}@if (!$loop->last), @endif
-        @endforeach
+@section('breadcrumb')
+    <a href="{{ route('dashboard') }}">Beranda</a>
+    <svg class="i" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+    <a href="{{ route('loans.index') }}">Peminjaman</a>
+    <svg class="i" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+    <span>Edit #{{ $loan->id }}</span>
+@endsection
+
+@section('hero')
+    <h1>Edit peminjaman #{{ $loan->id }}</h1>
+    <div class="meta"><span>Anggota dan buku tidak bisa diubah, hanya jadwal dan status.</span></div>
+@endsection
+
+@section('content')
+    <div class="form-narrow">
+        <div class="field">
+            <label>Anggota</label>
+            <div class="readonly">{{ $loan->member->nama }} ({{ $loan->member->nim }})</div>
+        </div>
+
+        <div class="field">
+            <label>Buku</label>
+            <div>
+                @foreach ($loan->loanItems as $item)
+                    <div class="book-line">
+                        <div class="thumb">
+                            @if ($item->book) @include('books.cover', ['book' => $item->book]) @else <div class="cover"></div> @endif
+                        </div>
+                        <span>{{ $item->book->judul ?? 'Buku (terhapus)' }}</span>
+                    </div>
+                @endforeach
+            </div>
+        </div>
+
+        <form action="{{ route('loans.update', $loan->id) }}" method="POST">
+            @csrf
+            @method('PUT')
+            <input type="hidden" name="tanggal_pinjam" value="{{ $loan->tanggal_pinjam }}">
+
+            <div class="row2">
+                <div class="field">
+                    <label for="tanggal_kembali">Tanggal kembali</label>
+                    <input type="date" name="tanggal_kembali" id="tanggal_kembali" value="{{ old('tanggal_kembali', $loan->tanggal_kembali) }}">
+                    @error('tanggal_kembali') <div class="err">{{ $message }}</div> @enderror
+                </div>
+                <div class="field">
+                    <label for="status">Status</label>
+                    <select name="status" id="status">
+                        <option value="dipinjam" @selected(old('status', $loan->status) == 'dipinjam')>Dipinjam</option>
+                        <option value="dikembalikan" @selected(old('status', $loan->status) == 'dikembalikan')>Dikembalikan</option>
+                        <option value="terlambat" @selected(old('status', $loan->status) == 'terlambat')>Terlambat</option>
+                    </select>
+                    @error('status') <div class="err">{{ $message }}</div> @enderror
+                </div>
+            </div>
+
+            <div class="form-actions">
+                <button type="submit" class="btn">Simpan perubahan</button>
+                <a href="{{ route('loans.show', $loan->id) }}" class="btn btn-secondary">Batal</a>
+            </div>
+        </form>
     </div>
-
-    <form action="{{ route('loans.update', $loan['id']) }}" method="POST">
-        @csrf
-        @method('PUT')
-        <input type="hidden" name="tanggal_pinjam" value="{{ $loan['tanggal_pinjam'] }}">
-
-        <label for="tanggal_kembali">Tanggal Kembali</label>
-        <input type="date" name="tanggal_kembali" id="tanggal_kembali" value="{{ old('tanggal_kembali', $loan['tanggal_kembali']) }}">
-        @error('tanggal_kembali')
-            <div class="error">{{ $message }}</div>
-        @enderror
-
-        <label for="status">Status</label>
-        <select name="status" id="status">
-            <option value="dipinjam" @selected(old('status', $loan['status']) == 'dipinjam')>Dipinjam</option>
-            <option value="dikembalikan" @selected(old('status', $loan['status']) == 'dikembalikan')>Dikembalikan</option>
-            <option value="terlambat" @selected(old('status', $loan['status']) == 'terlambat')>Terlambat</option>
-        </select>
-        @error('status')
-            <div class="error">{{ $message }}</div>
-        @enderror
-
-        <button type="submit" class="btn">Perbarui</button>
-    </form>
-</body>
-</html>
+@endsection

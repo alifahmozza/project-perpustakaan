@@ -1,83 +1,56 @@
-<!DOCTYPE html>
-<html lang="id">
-<head>
-    <meta charset="UTF-8">
-    <title>Detail Anggota</title>
-    <style>
-        body { font-family: sans-serif; margin: 40px; max-width: 600px; }
-        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
-        th, td { padding: 10px 0; text-align: left; border-bottom: 1px solid #eee; }
-        th { width: 35%; color: #333; }
-        a { color: #2563eb; text-decoration: none; }
-        a:hover { text-decoration: underline; }
-        .btn { display: inline-block; margin-top: 25px; padding: 8px 16px; background: #2563eb; color: #fff; border-radius: 4px; text-decoration: none; }
-        .btn:hover { background: #1d4ed8; text-decoration: none; }
-    </style>
-</head>
-<body>
-    <h1>Detail Anggota</h1>
-    
-    <p><a href="{{ route('members.index') }}">&larr; Kembali ke daftar anggota</a></p>
+@extends('layouts.app')
 
-    <table class="info">
-        <tr>
-            <th>Nama</th>
-            <td>{{ $member['nama'] }}</td>
-        </tr>
-        <tr>
-            <th>NIM</th>
-            <td>{{ $member['nim'] }}</td>
-        </tr>
-        <tr>
-            <th>Email</th>
-            <td>{{ $member['email'] }}</td>
-        </tr>
-        <tr>
-            <th>Nomor Telepon</th>
-            <td>{{ $member['nomor_telepon'] }}</td>
-        </tr>
-        <tr>
-            <th>Alamat</th>
-            <td>{{ $member['alamat'] }}</td>
-        </tr>
-        <tr>
-            <th>Status</th>
-            <td>{{ ucfirst($member['status']) }}</td>
-        </tr>
-    </table>
+@section('title', 'Profil Anggota')
 
-    <h2>Riwayat Peminjaman</h2>
-    <p><em>Diambil lewat relasi <code>$member->loans</code> - satu anggota bisa punya banyak transaksi peminjaman.</em></p>
+@section('breadcrumb')
+    <a href="{{ route('dashboard') }}">Beranda</a>
+    <svg class="i" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+    <span>Profil</span>
+@endsection
 
-    <table>
-        <thead>
-            <tr>
-                <th>Tanggal Pinjam</th>
-                <th>Tanggal Kembali</th>
-                <th>Petugas</th>
-                <th>Buku</th>
-                <th>Status</th>
-            </tr>
-        </thead>
-        <tbody>
-            @forelse ($member['loans'] as $loan)
-                <tr>
-                    <td>{{ $loan['tanggal_pinjam'] }}</td>
-                    <td>{{ $loan['tanggal_kembali'] }}</td>
-                    <td>{{ $loan['user']['name'] }}</td>
-                    <td>
-                        @foreach ($loan['loanItems'] as $item)
-                            {{ $item['book']['judul'] }}@if (!$loop->last), @endif
-                        @endforeach
-                    </td>
-                    <td>{{ ucfirst($loan['status']) }}</td>
-                </tr>
-            @empty
-                <tr>
-                    <td colspan="5">Anggota ini belum pernah meminjam buku.</td>
-                </tr>
-            @endforelse
-        </tbody>
-    </table>
-</body>
-</html>
+@section('hero')
+    <div class="hero-sub">
+        <span class="avatar">{{ Str::upper(Str::substr($member->name, 0, 1)) }}</span>
+        {{ ucfirst($member->role ?? 'Anggota') }}
+    </div>
+    <h1>{{ $member->name }}</h1>
+    <div class="meta"><span>{{ $member->email }}</span></div>
+@endsection
+
+@section('content')
+    <div class="form-narrow">
+        <div class="box" style="margin-bottom: 28px;">
+            <div class="box-head">Informasi akun</div>
+            <dl>
+                <div class="kv"><dt>Nama</dt><dd>{{ $member->nama }}</dd></div>
+                <div class="kv"><dt>Email</dt><dd>{{ $member->email }}</dd></div>
+                <div class="kv"><dt>Peran</dt><dd><span class="pill">{{ ucfirst($member->role ?? 'Anggota') }}</span></dd></div>
+                <div class="kv"><dt>Bergabung</dt><dd>{{ $member->created_at ? $member->created_at->format('d M Y') : '-' }}</dd></div>
+            </dl>
+        </div>
+
+        <div class="reset-password-section">
+            <h4>Pemulihan Akun</h4>
+            <p>Jika anggota lupa password, Anda dapat meresetnya menjadi password bawaan sistem (<strong>perpus123</strong>).</p>
+            
+            <form action="{{ route('members.reset-password', $member->id) }}" method="POST" onsubmit="return confirm('Yakin ingin mereset password anggota ini menjadi perpus123?')">
+                @csrf
+                @method('PUT')
+                <button type="submit" class="btn btn-warning">
+                    Reset Password
+                </button>
+            </form>
+        </div>
+    </div>
+@endsection
+
+@push('scripts')
+    <script>
+        document.getElementById('showPassword').addEventListener('change', function () {
+            const type = this.checked ? 'text' : 'password';
+            ['current_password', 'password', 'password_confirmation'].forEach(function (id) {
+                document.getElementById(id).type = type;
+            });
+        });
+    </script>
+@endpush

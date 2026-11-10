@@ -2,74 +2,76 @@
 
 @section('title', 'Profil Petugas')
 
-@section('content')
-    <h1>Profil Petugas</h1>
-
-    {{-- Alert jika password berhasil diubah --}}
-    @if (session('success'))
-        <div style="padding: 10px; background-color: #dcfce3; color: #166534; border: 1px solid #bbf7d0; border-radius: 4px; margin-bottom: 20px;">
-            {{ session('success') }}
-        </div>
-    @endif
-
-    <div style="margin-bottom: 30px;">
-        <p><strong>Nama:</strong> {{ $user->name }}</p>
-        <p><strong>Email:</strong> {{ $user->email }}</p>
-        <p><strong>Role:</strong> {{ ucfirst($user->role ?? 'Petugas') }}</p>
-    </div>
-
-    <hr>
-
-    <h2>Ganti Password</h2>
-    <form action="{{ route('profil.password.update') }}" method="POST" style="max-width: 400px;">
-        @csrf
-        @method('PUT')
-
-        <div style="margin-bottom: 15px;">
-            <label for="current_password" style="display:block; font-weight:bold;">Password Lama</label>
-            <input type="password" name="current_password" id="current_password" required style="width: 100%; padding: 8px;">
-            @error('current_password')
-                <div style="color: red; font-size: 14px; margin-top: 5px;">{{ $message }}</div>
-            @enderror
-        </div>
-
-        <div style="margin-bottom: 15px;">
-            <label for="password" style="display:block; font-weight:bold;">Password Baru</label>
-            <input type="password" name="password" id="password" required style="width: 100%; padding: 8px;">
-            @error('password')
-                <div style="color: red; font-size: 14px; margin-top: 5px;">{{ $message }}</div>
-            @enderror
-        </div>
-
-        <div style="margin-bottom: 15px;">
-            <label for="password_confirmation" style="display:block; font-weight:bold;">Konfirmasi Password Baru</label>
-            <input type="password" name="password_confirmation" id="password_confirmation" required style="width: 100%; padding: 8px;">
-        </div>
-
-        {{-- CHECKBOX UNTUK MELIHAT PASSWORD --}}
-        <div style="margin-bottom: 20px; display: flex; align-items: center; gap: 8px;">
-            <input type="checkbox" id="showPassword" onclick="togglePassword()" style="cursor: pointer;">
-            <label for="showPassword" style="cursor: pointer; font-size: 14px;">Tampilkan Password</label>
-        </div>
-
-        <button type="submit" style="padding: 10px 15px; background: #2563eb; color: #fff; border: none; border-radius: 4px; cursor: pointer;">
-            Simpan Password Baru
-        </button>
-    </form>
-
-    {{-- SCRIPT JAVASCRIPT --}}
-    <script>
-        function togglePassword() {
-            const currentPass = document.getElementById('current_password');
-            const newPass = document.getElementById('password');
-            const confirmPass = document.getElementById('password_confirmation');
-            const checkbox = document.getElementById('showPassword');
-
-            const type = checkbox.checked ? 'text' : 'password';
-            
-            currentPass.type = type;
-            newPass.type = type;
-            confirmPass.type = type;
-        }
-    </script>
+@section('breadcrumb')
+    <a href="{{ route('dashboard') }}">Beranda</a>
+    <svg class="i" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+    <span>Profil</span>
 @endsection
+
+@section('hero')
+    <div class="hero-sub">
+        <span class="avatar">{{ Str::upper(Str::substr($user->name, 0, 1)) }}</span>
+        {{ ucfirst($user->role ?? 'Petugas') }}
+    </div>
+    <h1>{{ $user->name }}</h1>
+    <div class="meta"><span>{{ $user->email }}</span></div>
+@endsection
+
+@section('content')
+    <div class="form-narrow">
+        <div class="box" style="margin-bottom: 28px;">
+            <div class="box-head">Informasi akun</div>
+            <dl>
+                <div class="kv"><dt>Nama</dt><dd>{{ $user->name }}</dd></div>
+                <div class="kv"><dt>Email</dt><dd>{{ $user->email }}</dd></div>
+                <div class="kv"><dt>Peran</dt><dd><span class="pill">{{ ucfirst($user->role ?? 'Petugas') }}</span></dd></div>
+                <div class="kv"><dt>Bergabung</dt><dd>{{ $user->created_at ? $user->created_at->format('d M Y') : '-' }}</dd></div>
+            </dl>
+        </div>
+
+        <div class="box">
+            <div class="box-head">Ganti kata sandi</div>
+            <div class="box-body">
+                <form action="{{ route('profil.password.update') }}" method="POST">
+                    @csrf
+                    @method('PUT')
+
+                    <div class="field">
+                        <label for="current_password">Password lama</label>
+                        <input type="password" name="current_password" id="current_password" autocomplete="current-password" required>
+                        @error('current_password') <div class="err">{{ $message }}</div> @enderror
+                    </div>
+
+                    <div class="field">
+                        <label for="password">Password baru</label>
+                        <input type="password" name="password" id="password" autocomplete="new-password" required>
+                        @error('password') <div class="err">{{ $message }}</div> @enderror
+                    </div>
+
+                    <div class="field">
+                        <label for="password_confirmation">Konfirmasi password baru</label>
+                        <input type="password" name="password_confirmation" id="password_confirmation" autocomplete="new-password" required>
+                    </div>
+
+                    <label class="pick" style="padding-left: 0; margin-bottom: 18px !important; width: fit-content;">
+                        <input type="checkbox" id="showPassword">
+                        Tampilkan password
+                    </label>
+
+                    <button type="submit" class="btn">Simpan password baru</button>
+                </form>
+            </div>
+        </div>
+    </div>
+@endsection
+
+@push('scripts')
+    <script>
+        document.getElementById('showPassword').addEventListener('change', function () {
+            const type = this.checked ? 'text' : 'password';
+            ['current_password', 'password', 'password_confirmation'].forEach(function (id) {
+                document.getElementById(id).type = type;
+            });
+        });
+    </script>
+@endpush

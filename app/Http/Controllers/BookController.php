@@ -9,9 +9,17 @@ use App\Models\Category;
 
 class BookController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $books = Book::with('category')->paginate(10);
+        $query = \App\Models\Book::query();
+
+        if ($request->has('search') && $request->search != '') {
+            $katakunci = $request->search;
+
+            $query->where('judul', 'like', '%' . $katakunci . '%');
+        }
+
+        $books = $query->paginate(12);
 
         return view('books.index', compact('books'));
     }

@@ -1,81 +1,78 @@
-<!DOCTYPE html>
-<html lang="id">
-<head>
-    <meta charset="UTF-8">
-    <title>Tambah Peminjaman</title>
-    <style>
-        body { font-family: sans-serif; margin: 40px; max-width: 500px; }
-        label { display: block; margin-top: 12px; font-weight: bold; }
-        input, select { width: 100%; padding: 6px; margin-top: 4px; box-sizing: border-box; }
-        .checkbox-list { border: 1px solid #ccc; border-radius: 4px; padding: 10px; margin-top: 4px; max-height: 200px; overflow-y: auto; }
-        .checkbox-list label { display: block; font-weight: normal; margin-top: 0; }
-        .error { color: #b91c1c; font-size: 14px; margin-top: 4px; }
-        .btn { margin-top: 20px; padding: 8px 16px; background: #2563eb; color: #fff; border: none; border-radius: 4px; cursor: pointer; }
-    </style>
-</head>
-<body>
-    <h1>Tambah Peminjaman</h1>
-    <p><a href="{{ route('loans.index') }}">&larr; Kembali ke daftar peminjaman</a></p>
+@extends('layouts.app')
 
-    <form action="{{ route('loans.store') }}" method="POST">
+@section('title', 'Tambah Peminjaman')
+
+@section('breadcrumb')
+    <a href="{{ route('dashboard') }}">Beranda</a>
+    <svg class="i" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+    <a href="{{ route('loans.index') }}">Peminjaman</a>
+    <svg class="i" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+    <span>Tambah peminjaman</span>
+@endsection
+
+@section('hero')
+    <h1>Tambah peminjaman</h1>
+    <div class="meta">
+        <span>
+            <svg class="i" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            Petugas pencatat: {{ auth()->user()->name }}
+        </span>
+    </div>
+@endsection
+
+@section('content')
+    <form action="{{ route('loans.store') }}" method="POST" class="form-narrow">
         @csrf
 
-        <label for="member_id">Anggota</label>
-        <select name="member_id" id="member_id">
-            <option value="">-- Pilih Anggota --</option>
-            @foreach ($members as $member)
-                <option value="{{ $member['id'] }}" @selected(old('member_id') == $member['id'])>
-                    {{ $member['nama'] }} ({{ $member['nim'] }})
-                </option>
-            @endforeach
-        </select>
-        @error('member_id')
-            <div class="error">{{ $message }}</div>
-        @enderror
-
-        <label for="user_id">Petugas</label>
-        <select name="user_id" id="user_id">
-            <option value="">-- Pilih Petugas --</option>
-            @foreach ($users as $user)
-                <option value="{{ $user->id }}" @selected(old('user_id') == $user->id)>
-                    {{ $user->name}}
-                </option>
-            @endforeach
-        </select>
-        @error('user_id')
-            <div class="error">{{ $message }}</div>
-        @enderror
-        <p><em>Petugas pencatat: {{ auth()->user()->name }} (otomatis dari akun yang login).</em></p>
-
-        <label for="tanggal_pinjam">Tanggal Pinjam</label>
-        <input type="date" name="tanggal_pinjam" id="tanggal_pinjam" value="{{ old('tanggal_pinjam') }}">
-        @error('tanggal_pinjam')
-            <div class="error">{{ $message }}</div>
-        @enderror
-
-        <label for="tanggal_kembali">Tanggal Kembali</label>
-        <input type="date" name="tanggal_kembali" id="tanggal_kembali" value="{{ old('tanggal_kembali') }}">
-        @error('tanggal_kembali')
-            <div class="error">{{ $message }}</div>
-        @enderror
-
-        <label>Buku yang Dipinjam</label>
-        <div class="checkbox-list">
-            @forelse ($books as $book)
-                <label>
-                    <input type="checkbox" name="book_ids[]" value="{{ $book['id'] }}"
-                        @checked(in_array($book['id'], old('book_ids', [])))>
-                    {{ $book['judul'] }} (stok: {{ $book['stok'] }})
-                </label>
-            @empty
-                <p>Belum ada data buku.</p>
-            @endforelse
+        <div class="field">
+            <label for="member_id">Anggota</label>
+            <select name="member_id" id="member_id">
+                <option value="">Pilih anggota</option>
+                @foreach ($members as $member)
+                    <option value="{{ $member->id }}" @selected(old('member_id', request('member_id')) == $member->id)>
+                        {{ $member->nama }} ({{ $member->nim }})
+                    </option>
+                @endforeach
+            </select>
+            @error('member_id') <div class="err">{{ $message }}</div> @enderror
         </div>
-        @error('book_ids')
-            <div class="error">{{ $message }}</div>
-        @enderror
 
-        <button type="submit" class="btn">Simpan</button>
+        <div class="row2">
+            <div class="field">
+                <label for="tanggal_pinjam">Tanggal pinjam</label>
+                <input type="date" name="tanggal_pinjam" id="tanggal_pinjam" value="{{ old('tanggal_pinjam', date('Y-m-d')) }}">
+                @error('tanggal_pinjam') <div class="err">{{ $message }}</div> @enderror
+            </div>
+            <div class="field">
+                <label for="tanggal_kembali">Tanggal kembali</label>
+                <input type="date" name="tanggal_kembali" id="tanggal_kembali" value="{{ old('tanggal_kembali') }}">
+                @error('tanggal_kembali') <div class="err">{{ $message }}</div> @enderror
+            </div>
+        </div>
+
+        <div class="field">
+            <label>Buku yang dipinjam</label>
+            <div class="picker">
+                @php $selected = array_map('intval', (array) old('book_ids', request('book_id') ? [request('book_id')] : [])); @endphp
+                @forelse ($books as $book)
+                    <label class="pick">
+                        <input type="checkbox" name="book_ids[]" value="{{ $book->id }}" @checked(in_array($book->id, $selected))>
+                        <div class="thumb">@include('books.cover', ['book' => $book])</div>
+                        <div>
+                            <div style="font-weight: 600;">{{ $book->judul }}</div>
+                            <div class="muted small">{{ $book->penulis }} · Stok {{ $book->stok }}</div>
+                        </div>
+                    </label>
+                @empty
+                    <p class="muted" style="padding: 12px;">Belum ada data buku.</p>
+                @endforelse
+            </div>
+            @error('book_ids') <div class="err">{{ $message }}</div> @enderror
+        </div>
+
+        <div class="form-actions">
+            <button type="submit" class="btn">Simpan peminjaman</button>
+            <a href="{{ route('loans.index') }}" class="btn btn-secondary">Batal</a>
+        </div>
     </form>
-</body>
-</html>
+@endsection

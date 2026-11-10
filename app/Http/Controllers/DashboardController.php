@@ -2,6 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Book;
+use App\Models\Category;
+use App\Models\Loan;
+use App\Models\Member;
 use Illuminate\Http\Request;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Support\Facades\Http;
@@ -23,9 +27,20 @@ class DashboardController extends Controller
                 $stats = $response->json();
             }
         } catch (ConnectionException $e) {
-            // Server internal API (port 8011) tidak bisa dihubungi - statistik tetap tampil nol.
+            // Server internal API (port 8011) tidak bisa dihubungi — fallback ke query langsung
+            $stats = [
+                'total_buku' => Book::count(),
+                'total_anggota' => Member::count(),
+                'peminjaman_aktif' => Loan::where('status', 'dipinjam')->count(),
+            ];
         }
 
-        return view('dashboard', compact('stats'));
+        // Ambil kategori (untuk Browse the stacks)
+        $categories = Category::withCount('books')->get();
+
+        // Ambil buku terbaru
+        $latestBooks = Book::with('category')->latest()->take(8)->get();
+
+        return view('dashboard', compact('stats', 'categories', 'latestBooks'));
     }
 }

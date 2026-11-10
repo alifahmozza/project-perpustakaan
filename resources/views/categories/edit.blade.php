@@ -1,37 +1,40 @@
-<!DOCTYPE html>
-<html lang="id">
-<head>
-    <meta charset="UTF-8">
-    <title>Edit Kategori</title>
-    <style>
-        body { font-family: sans-serif; margin: 40px; max-width: 500px; }
-        label { display: block; margin-top: 12px; font-weight: bold; }
-        input, textarea { width: 100%; padding: 6px; margin-top: 4px; box-sizing: border-box; }
-        .error { color: #b91c1c; font-size: 14px; margin-top: 4px; }
-        .btn { margin-top: 20px; padding: 8px 16px; background: #2563eb; color: #fff; border: none; border-radius: 4px; cursor: pointer; }
-    </style>
-</head>
-<body>
-    <h1>Edit Kategori</h1>
-    <p><a href="{{ route('categories.index') }}">&larr; Kembali ke daftar kategori</a></p>
+@extends('layouts.app')
 
-    <form action="{{ route('categories.update', $category['id']) }}" method="POST">
+@section('title', 'Edit Kategori — ' . $category->nama_kategori)
+
+@section('breadcrumb')
+    <a href="{{ route('dashboard') }}">Beranda</a>
+    <svg class="i" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+    <a href="{{ route('categories.index') }}">Kategori</a>
+    <svg class="i" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+    <span>Edit {{ $category->nama_kategori }}</span>
+@endsection
+
+@section('hero')
+    <h1>Edit kategori</h1>
+    <div class="meta"><span>{{ $category->nama_kategori }}</span></div>
+@endsection
+
+@section('content')
+    <form action="{{ route('categories.update', $category->id) }}" method="POST" class="form-narrow">
         @csrf
         @method('PUT')
 
-        <label for="nama_kategori">Nama Kategori</label>
-        <input type="text" name="nama_kategori" id="nama_kategori" value="{{ old('nama_kategori', $category['nama_kategori']) }}">
-        @error('nama_kategori')
-            <div class="error">{{ $message }}</div>
-        @enderror
+        <div class="field">
+            <label for="nama_kategori">Nama kategori</label>
+            <input type="text" name="nama_kategori" id="nama_kategori" value="{{ old('nama_kategori', $category->nama_kategori) }}" autofocus>
+            @error('nama_kategori') <div class="err">{{ $message }}</div> @enderror
+        </div>
 
-        <label for="deskripsi">Deskripsi (opsional)</label>
-        <textarea name="deskripsi" id="deskripsi" rows="4">{{ old('deskripsi', $category['deskripsi']) }}</textarea>
-        @error('deskripsi')
-            <div class="error">{{ $message }}</div>
-        @enderror
+        <div class="field">
+            <label for="deskripsi">Deskripsi (opsional)</label>
+            <textarea name="deskripsi" id="deskripsi" rows="4">{{ old('deskripsi', $category->deskripsi) }}</textarea>
+            @error('deskripsi') <div class="err">{{ $message }}</div> @enderror
+        </div>
 
-        <button type="submit" class="btn">Perbarui</button>
+        <div class="form-actions">
+            <button type="submit" class="btn">Simpan perubahan</button>
+            <a href="{{ route('categories.index') }}" class="btn btn-secondary">Batal</a>
+        </div>
     </form>
-</body>
-</html>
+@endsection

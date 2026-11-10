@@ -4,10 +4,10 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-use App\Http\Resources\MemberResource;
-use App\Models\Member;
 use App\Models\Loan;
+use App\Models\Book;
 use App\Http\Resources\LoanResource;
+use Carbon\Carbon;
 
 class LoanController extends Controller
 {
@@ -42,10 +42,16 @@ class LoanController extends Controller
             'user_id' => $validated['user_id'],
             'tanggal_pinjam' => $validated['tanggal_pinjam'],
             'tanggal_kembali' => $validated['tanggal_kembali'],
+            'status' => 'dipinjam',
+            'denda' => 0,
         ]);
 
         foreach ($validated['book_ids'] as $bookId) {
             $loan->loanItems()->create(['book_id' => $bookId]);
+            $book = Book::find($bookId);
+            if ($book && $book->stok > 0) {
+                $book->decrement('stok');
+            }
         }
 
         $loan->refresh()->load(['member', 'user', 'loanItems.book']);
@@ -57,9 +63,26 @@ class LoanController extends Controller
     {
         $loan = Loan::with(['member', 'user', 'loanItems.book'])->findOrFail($id);
 
+        $tanggalBatas = Carbon::parse($loan->tanggal_kembali)->startOfDay();
+        $hariIni = Carbon::now()->startOfDay();
+        $denda = 0;
+
+        if ($hariIni->greaterThan($tanggalBatas)) {
+            $selisihHari = abs((int) $tanggalBatas->diffInDays($hariIni));
+            $denda = $selisihHari * 2000;
+        }
+
+        foreach ($loan->loanItems as $item) {
+            $book = Book::find($item->book_id);
+            if ($book) {
+                $book->increment('stok');
+            }
+        }
+
         $loan->update([
             'status' => 'dikembalikan',
-            'tanggal_dikembalikan' => now()->toDateString(),
+            'tanggal_dikembalikan' => $hariIni->toDateString(),
+            'denda' => $denda,
         ]);
 
         return new LoanResource($loan);

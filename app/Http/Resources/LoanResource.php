@@ -4,6 +4,7 @@ namespace App\Http\Resources;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
+use Carbon\Carbon;
 
 class LoanResource extends JsonResource
 {
@@ -14,7 +15,6 @@ class LoanResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
-        return parent::toArray($request);
         return [
             'id' => $this->id,
             'member' => [
@@ -33,6 +33,7 @@ class LoanResource extends JsonResource
                 'id' => $item->book?->id,
                 'judul' => $item->book?->judul,
             ]),
+            'denda' => $this->denda, 
         ];
     }
 }

@@ -11,9 +11,16 @@ use App\Http\Resources\MemberResource;
 
 class MemberController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $members = Member::paginate(10);
+        $query = \App\Models\Member::query();
+
+        if ($request->has('search') && $request->search != '') {
+            $katakunci = $request->search;
+            $query->where('nama', 'like', '%' . $katakunci . '%');
+        }
+
+        $members = $query->paginate(10);
 
         return MemberResource::collection($members);
     }
