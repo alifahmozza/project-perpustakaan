@@ -5,4 +5,4 @@
 1. **Clone Repository**
    ```bash
    git clone <link-repo-github-kamu>
-   cd app-perpustakaan
+   cd project-perpustakaan
